@@ -1,0 +1,48 @@
+{
+    "productname" : "ADV.DM108",
+    "__descr__" : {
+        "*" : "Wireless ModBus gateway",
+        "fr" : "Passerelle radio ModBus"
+    },
+    "supports" : [],
+    "pdefs" : {
+        "root" : {
+            "__seq__" : ["address", "location", "enabled", "polling", "events_ttl"],
+            "polling" : {
+                "type" : "period",
+                "label" : {
+                    "fr" : "Période lecture",
+                    "*" : "Polling period"
+                },
+                "defvalue" : "1m"
+            },
+            "events_ttl" : {
+                "type" : "period",
+                "label" : {
+                    "fr" : "Validité des événements",
+                    "*" : "Events time to live"
+                },
+                "defvalue" : "2h"
+            }
+        },
+        "outputs" : {
+            "__seq__" : ["PULSE_CNT"],
+            "PULSE_CNT" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Impulsions",
+                    "*" : "Pulses"
+                },
+                "__vartype__" : "counter",
+                "delta_min" : {
+                    "type" : "int",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 0
+                }
+            }
+        }
+    }
+}

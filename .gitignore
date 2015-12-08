@@ -1,0 +1,16 @@
+.backup
+*~
+*.pyc
+.ropeproject
+.idea
+.metadata
+**/.idea
+**/.pydevproject
+**/.settings
+.project
+*.deb
+cstbox-*_all/
+deprecated/
+lib/python/pycstbox/__init__.py
+DEBIAN/control
+RELEASE-VERSION
