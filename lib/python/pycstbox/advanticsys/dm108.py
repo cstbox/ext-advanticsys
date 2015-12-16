@@ -29,19 +29,17 @@ Depends on Jonas Berg's minimalmodbus Python library :
     Version in date of writing: 0.4
 """
 
-import minimalmodbus
 import struct
 from collections import namedtuple
-import time
 import logging
 
-from pycstbox.modbus import ModbusRegister
-from pycstbox.log import Loggable
+from pycstbox.modbus import ModbusRegister, RTUModbusHWDevice
+from pycstbox.hal import HalError
 
 __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 
-class DM108Instrument(minimalmodbus.Instrument, Loggable):
+class DM108Instrument(RTUModbusHWDevice):
     """ minimalmodbus.Instrument sub-class modeling the Carlo Gavazzi EM21
     3-phased energy meter.
 
@@ -116,31 +114,20 @@ class DM108Instrument(minimalmodbus.Instrument, Loggable):
         :param int unit_id: the address of the device
         :param int baudrate: the serial communication baudrate
         """
-        super(DM108Instrument, self).__init__(port=port, slaveaddress=int(unit_id))
-
-        self.serial.close()
-        self.serial.setBaudrate(baudrate)
-        self.serial.setTimeout(2)
-        self.serial.open()
-        self.serial.flush()
-        self.communication_error = False
-
-        Loggable.__init__(self, logname='dm108-%03d' % self.address)
+        super(DM108Instrument, self).__init__(port=port, unit_id=int(unit_id), baudrate=baudrate, logname='dm108')
 
         # check that unit id matches
         self._logger.info('getting unit configuration...')
-        self._config = self.Configuration(self.read_string(self.GROUP_AND_CHANNEL.addr, 9))
-        self._logger.info('... %s', self._config)
+        try:
+            self._config = self.Configuration(self.read_string(self.GROUP_AND_CHANNEL.addr, 9))
+            self._logger.info('... %s', self._config)
 
-        if self._config.modbus_id != self.unit_id:
-            raise ValueError('!!! stored id (%d) does not match', self._config.modbus_id)
+            if self._config.modbus_id != self.unit_id:
+                raise ValueError('!!! stored id (%d) does not match', self._config.modbus_id)
 
-        self._logger.info('DM108 id=%s role: %s', self.unit_id, 'coordinator' if self.is_coordinator else 'endpoint')
-
-    @property
-    def unit_id(self):
-        """ The id of the device """
-        return self.address
+            self._logger.info('DM108 id=%s role: %s', self.unit_id, 'coordinator' if self.is_coordinator else 'endpoint')
+        except IOError as e:
+            raise HalError(e.message)
 
     def poll(self):
         """ Reads all the measurement registers and the values as a named tuple.
@@ -154,23 +141,9 @@ class DM108Instrument(minimalmodbus.Instrument, Loggable):
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("reading registers")
 
-        # ensure no junk is lurking there
-        self.serial.flush()
-        try:
-            data = self.read_string(self.ALL_REGS[0].addr, self._TOTAL_REG_SIZE)
-        except ValueError:
-            # CRC error is reported as ValueError
-            # => clean the pipes, wait a bit abd abandon this transaction
-            self.log_error('trying to recover from error')
-            self.serial.close()
-            time.sleep(2)
-            self.serial.open()
-            self.communication_error = True
+        data = self._read_registers(self.ALL_REGS[0].addr, self._TOTAL_REG_SIZE)
+        if not data:
             return None
-
-        if self.communication_error:
-            self.log_info('recovered from error')
-            self.communication_error = False
 
         raw_values = struct.unpack('>i', data)
 
