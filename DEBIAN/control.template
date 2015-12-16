@@ -3,7 +3,7 @@ Version: %(version)s
 Section: base
 Priority: optional
 Architecture: all
-Depends: cstbox-core, cstbox-ext-modbus
+Depends: cstbox-core, cstbox-ext-modbus(>=1.1.2)
 Maintainer: Eric Pascual <eric.pascual@cstb.fr>
 Description: CSTBox AdvanticSys Modbus products support
     This package adds to an existing CSTBox framework the support
