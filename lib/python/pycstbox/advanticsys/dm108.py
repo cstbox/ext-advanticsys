@@ -110,16 +110,20 @@ class DM108Instrument(minimalmodbus.Instrument, Loggable):
     #:      the field sequence MUST be synchronized with the register sequence as defined in `ALL_REGS`
     OutputValues = namedtuple('OutputValues', ["PULSE_CNT"])
 
-    def __init__(self, port, unit_id, baudrate=DEFAULT_BAUDRATE, inter_requests_delay=0.5):
+    def __init__(self, port, unit_id, baudrate=DEFAULT_BAUDRATE):
         """
         :param str port: serial port on which the RS485 interface is connected
         :param int unit_id: the address of the device
         :param int baudrate: the serial communication baudrate
-        :param float inter_requests_delay: the delay between successive ModBus requests
         """
         super(DM108Instrument, self).__init__(port=port, slaveaddress=int(unit_id))
-        self.serial.baudrate = baudrate
-        self.serial.timeout = 0.5
+
+        self.serial.close()
+        self.serial.setBaudrate(baudrate)
+        self.serial.setTimeout(2)
+        self.serial.open()
+        self.serial.flush()
+        self.communication_error = False
 
         Loggable.__init__(self, logname='dm108-%03d' % self.address)
 
@@ -143,10 +147,33 @@ class DM108Instrument(minimalmodbus.Instrument, Loggable):
 
         :rtype: OutputValues
         """
+        if self._logger.isEnabledFor(logging.DEBUG):
+            self._logger.debug("polling %s(%d)", self.__class__.__name__, self.unit_id)
+
         # read all the registers
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("reading registers")
-        raw_values = struct.unpack('>i', self.read_string(self.ALL_REGS[0].addr, self._TOTAL_REG_SIZE))
+
+        # ensure no junk is lurking there
+        self.serial.flush()
+        try:
+            data = self.read_string(self.ALL_REGS[0].addr, self._TOTAL_REG_SIZE)
+        except ValueError:
+            # CRC error is reported as ValueError
+            # => clean the pipes, wait a bit abd abandon this transaction
+            self.log_error('trying to recover from error')
+            self.serial.close()
+            time.sleep(2)
+            self.serial.open()
+            self.communication_error = True
+            return None
+
+        if self.communication_error:
+            self.log_info('recovered from error')
+            self.communication_error = False
+
+        raw_values = struct.unpack('>i', data)
+
         if self._logger.isEnabledFor(logging.DEBUG):
             self._logger.debug("... raw: %s", ' '.join(hex(r) for r in raw_values))
 
