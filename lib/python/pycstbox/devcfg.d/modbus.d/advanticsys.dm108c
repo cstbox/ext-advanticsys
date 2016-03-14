@@ -1,0 +1,203 @@
+{
+    "productname" : "ADV.DM108C",
+    "__descr__" : {
+        "*" : "Wireless ModBus parameters collector",
+        "fr" : "Collecteur radio ModBus"
+    },
+    "supports" : [],
+    "pdefs" : {
+        "root" : {
+            "__seq__" : ["address", "location", "enabled", "polling", "events_ttl"],
+            "polling" : {
+                "type" : "period",
+                "label" : {
+                    "fr" : "Période lecture",
+                    "*" : "Polling period"
+                },
+                "defvalue" : "1m"
+            },
+            "events_ttl" : {
+                "type" : "period",
+                "label" : {
+                    "fr" : "Validité des événements",
+                    "*" : "Events time to live"
+                },
+                "defvalue" : "2h"
+            }
+        },
+        "outputs" : {
+            "__seq__" : [
+                "V_L1_N", "A_L1", "W_L1", "VA_L1", "VAR_L1",
+                "PF_L1", "FREQ", "KWH", "KVARH", "PULSE_CNT"
+            ],
+            "V_L1_N" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Tension L1-Neutre",
+                    "*" : "L1-Neutral voltage"
+                },
+                "__vartype__" : "voltage",
+                "__varunits__" : "V",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 1
+                }
+            },
+            "A_L1" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Intensité L1",
+                    "*" : "L1 current"
+                },
+                "__vartype__" : "current",
+                "__varunits__" : "A",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 1
+                }
+            },
+            "W_L1" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Puissance L1",
+                    "*" : "L1 power"
+                },
+                "__vartype__" : "power",
+                "__varunits__" : "W",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 5
+                }
+            },
+            "VA_L1" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Puissance active L1",
+                    "*" : "L1 active power"
+                },
+                "__vartype__" : "power",
+                "__varunits__" : "VA",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 5
+                }
+            },
+            "VAR_L1" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Puissance réactive L1",
+                    "*" : "L1 reactive power"
+                },
+                "__vartype__" : "power.reactive",
+                "__varunits__" : "VAR",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 5
+                }
+            },
+            "PF_L1" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Facteur de puissance L1",
+                    "*" : "L1 power factor"
+                },
+                "__vartype__" : "power_factor",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 0.01
+                }
+            },
+            "FREQ" : {
+                "__seq__" : ["enabled","delta_min"],
+                "__descr__" :  {
+                    "fr" : "Fréquence",
+                    "*" : "Frequency"
+                },
+                "__vartype__" : "frequency",
+                "__varunits__" : "Hz",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 0.5
+                }
+            },
+            "kWh" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" :  {
+                    "fr" : "Energie active totale",
+                    "*" : "System active energy"
+                },
+                "__vartype__" : "energy",
+                "__varunits__" : "kWh",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 1
+                }
+            },
+            "kVARh" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" :  {
+                    "fr" : "Energie réactive totale",
+                    "*" : "System reactive energy"
+                },
+                "__vartype__" : "energy.reactive",
+                "__varunits__" : "kVArh",
+                "delta_min" : {
+                    "type" : "float",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 1
+                }
+            },
+            "PULSE_CNT" : {
+                "__seq__" : ["enabled", "delta_min"],
+                "__descr__" : {
+                    "fr" : "Impulsions",
+                    "*" : "Pulses"
+                },
+                "__vartype__" : "counter",
+                "delta_min" : {
+                    "type" : "int",
+                    "label" : {
+                        "fr" : "Variation minimale",
+                        "*" : "Variation threshold"
+                    },
+                    "defvalue" : 0
+                }
+            }
+        }
+    }
+}
