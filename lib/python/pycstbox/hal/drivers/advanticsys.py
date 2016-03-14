@@ -21,7 +21,7 @@
 import logging
 
 import pycstbox.hal.device as haldev
-from pycstbox.advanticsys import dm108
+from pycstbox.advanticsys import dm108, dm108c
 from pycstbox.hal import hal_device
 
 _logger = logging.getLogger('advsys')
@@ -40,3 +40,16 @@ class DM108(haldev.PolledDevice):
     def __init__(self, coord, cfg):
         super(DM108, self).__init__(coord, cfg)
         self._hwdev = dm108.DM108Instrument(coord.port, cfg.address)
+
+
+@hal_device(device_type="advanticsys.dm108c", coordinator_type="modbus")
+class DM108C(haldev.PolledDevice):
+    """ HAL device modeling the AdvanticSys DM-108C wireless Modbus parameter collector.
+
+    The extension adds the support of polling requests and CSTBox events
+    publishing on D-Bus.
+    """
+
+    def __init__(self, coord, cfg):
+        super(DM108C, self).__init__(coord, cfg)
+        self._hwdev = dm108c.DM108CInstrument(coord.port, cfg.address)
