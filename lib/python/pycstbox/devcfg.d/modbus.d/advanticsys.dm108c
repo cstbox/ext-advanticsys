@@ -28,7 +28,7 @@
         "outputs" : {
             "__seq__" : [
                 "V_L1_N", "A_L1", "W_L1", "VA_L1", "VAR_L1",
-                "PF_L1", "FREQ", "KWH", "KVARH", "PULSE_CNT"
+                "PF_L1", "FREQ", "kWh", "kVARh", "PULSE_CNT"
             ],
             "V_L1_N" : {
                 "__seq__" : ["enabled", "delta_min"],
