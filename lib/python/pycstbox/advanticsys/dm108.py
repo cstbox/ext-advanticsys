@@ -124,7 +124,7 @@ class DM108Instrument(RTUModbusHWDevice):
             self._logger.info('... %s', self._config)
 
             if self._config.modbus_id != self.unit_id:
-                raise ValueError('!!! stored id (%d) does not match', self._config.modbus_id)
+                raise HalError('!!! stored id (%d) does not match', self._config.modbus_id)
 
             self._logger.info('DM108 id=%s role: %s', self.unit_id, 'coordinator' if self.is_coordinator else 'endpoint')
         except IOError as e:
