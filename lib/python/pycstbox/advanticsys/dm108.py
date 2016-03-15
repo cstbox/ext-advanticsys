@@ -126,7 +126,7 @@ class DM108Instrument(RTUModbusHWDevice):
             if self._config.modbus_id != self.unit_id:
                 raise HalError(
                     'Modbus id stored in config regs does not match (expecting %d, got %d)' %
-                    (unit_id, self._config.modbus_id)
+                    (self.unit_id, self._config.modbus_id)
                 )
 
             self._logger.info('DM108 id=%s role: %s', self.unit_id, 'coordinator' if self.is_coordinator else 'endpoint')
