@@ -79,14 +79,16 @@ class DM108Instrument(RTUModbusHWDevice):
         _bauds = (2400, 4800, 9600, 19200)
         _parity = ('N', 'O', 'E')
 
-        def __init__(self, data):
-            # group_id, radio_channel, modbus_id, roll_node, uart_config, radio_id, act_enabled,
-            #         aes_enabled, radio_power, retries, timeout):
+        def __init__(self, data, logger):
             self.group_id, self.radio_channel, self.modbus_id, roll_node, _, uart_config, \
             self.radio_id, self.act_enabled, self.aes_enabled, radio_power, _, _, \
             self.retries, _, self.timeout = \
                 struct.unpack('>BBBBBBHBBBBBBHH', data)
-            self.radio_power = self._dbm[radio_power]
+            try:
+                self.radio_power = self._dbm[radio_power]
+            except KeyError:
+                logger.error("unexpected radio power register content (%s)", radio_power)
+                self.radio_power = 0
             self.is_coordinator = bool(roll_node)
             self.uart_config = (
                 self._bauds[(uart_config & 0xc0) >> 6],
@@ -118,7 +120,7 @@ class DM108Instrument(RTUModbusHWDevice):
         # check that unit id matches
         self._logger.info('getting unit configuration...')
         try:
-            self._config = self.Configuration(self.read_string(self.GROUP_AND_CHANNEL.addr, 9))
+            self._config = self.Configuration(self.read_string(self.GROUP_AND_CHANNEL.addr, 9), self._logger)
             self._logger.info('... %s', self._config)
 
             if self._config.modbus_id != self.unit_id:
