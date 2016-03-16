@@ -35,6 +35,8 @@ __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 
 
 class DM108CInstrument(DM108Instrument):
+    MODBUS_ID = ModbusRegister(DM108Instrument.ADDR_BASE + 4224)
+
     class EM24_INT32Reg(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size and
@@ -106,6 +108,15 @@ class DM108CInstrument(DM108Instrument):
         'OutputValues',
         ["V_L1_N", "A_L1", "W_L1", "VA_L1", "VAR_L1", "PF_L1", "FREQ", "KWH", "KVARH", "PULSE_CNT"]
     )
+
+    class Configuration(object):
+        is_coordinator = True
+
+        def __init__(self, data, logger):
+            _, self.modbus_id = struct.unpack('>BB', data)
+
+        def __str__(self):
+            return "Configuration(modbus_id=%d)" % self.modbus_id
 
     #: delay between two successive register readings
     PACE_DELAY = 1
