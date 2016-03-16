@@ -111,7 +111,7 @@ class DM108CInstrument(DM108Instrument):
     KWH = EnergyRegister(DM108Instrument.ADDR_BASE + 4423)
     KVARH = EnergyRegister(DM108Instrument.ADDR_BASE + 4437)
 
-    PULSE_CNT = WaterVolumeRegister(DM108Instrument.ADDR_BASE + 4466, size=2)
+    PULSE_CNT = WaterVolumeRegister(DM108Instrument.ADDR_BASE + 4466)
 
     #: the compiled sequence of registers
     ALL_REGS = [V_L1_N, A_L1, W_L1, VA_L1, VAR_L1, PF_L1, FREQ, KWH, KVARH, PULSE_CNT]
