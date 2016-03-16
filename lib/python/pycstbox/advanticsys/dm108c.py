@@ -27,6 +27,7 @@ import struct
 from collections import namedtuple
 import logging
 import time
+import binascii
 
 from pycstbox.modbus import ModbusRegister
 from dm108 import DM108Instrument
@@ -42,64 +43,76 @@ class DM108CInstrument(DM108Instrument):
         lambda accum, size: accum + size, [r.size for r in CONFIGURATION_REGISTERS]
     )
 
-    class INT32Reg(ModbusRegister):
+    class EM24INT32Reg(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size and
             forcing unsigned values since 2's complement is used here.
             """
             return ModbusRegister.__new__(cls, addr, size=2, signed=False, *args, **kwargs)
 
-        @staticmethod
-        def decode(raw):
+        def decode(self, raw):
             # swap the words and apply the 2's complement if negative value
             # BTW discard the signed since negative values have no real meaning
             raw = ((raw >> 16) & 0xffff) | ((raw & 0xffff) << 16)
-            return abs(raw - 0x100000000) if raw & 0x80000000 else raw
+            if self.signed:
+                return abs(raw - 0x100000000) if raw & 0x80000000 else raw
+            else:
+                return raw
 
-    class VoltageRegister(INT32Reg):
+        @property
+        def unpack_format(self):
+            return '>' + super(DM108CInstrument.EM24INT32Reg, self).unpack_format
+
+    class VoltageRegister(EM24INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
 
-    class CurrentRegister(INT32Reg):
+    class CurrentRegister(EM24INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.INT32Reg.decode(raw) / 1000.
+            return DM108CInstrument.EM24INT32Reg.decode(raw) / 1000.
 
-    class PowerRegister(INT32Reg):
+    class PowerRegister(EM24INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
 
-    class PowerFactorRegister(ModbusRegister):
+    class EM24INT16Register(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size. """
             return ModbusRegister.__new__(cls, addr, *args, **kwargs)
 
+        @property
+        def unpack_format(self):
+            return '>' + super(DM108CInstrument.EM24INT16Register, self).unpack_format
+
+    class PowerFactorRegister(EM24INT16Register):
         @staticmethod
         def decode(raw):
             return raw / 1000.
 
-    class FrequencyRegister(ModbusRegister):
-        def __new__(cls, addr, *args, **kwargs):
-            """ Overridden __new__ for fixing the register size. """
-            return ModbusRegister.__new__(cls, addr, *args, **kwargs)
-
+    class FrequencyRegister(EM24INT16Register):
         @staticmethod
         def decode(raw):
-            return raw / 10.    # TODO to be checked since it was wrong for EM21
+            return raw / 10.
 
-    class EnergyRegister(INT32Reg):
+    class EnergyRegister(EM24INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
 
-    class WaterVolumeRegister(INT32Reg):
+    class WaterVolumeRegister(ModbusRegister):
         scale = 10.
 
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.INT32Reg.decode(raw) / DM108CInstrument.WaterVolumeRegister.scale
+            return DM108CInstrument.EM24INT32Reg.decode(raw) / DM108CInstrument.WaterVolumeRegister.scale
+
+        @property
+        def unpack_format(self):
+            # DM108 regs do not use the same endianess as EM24 ones
+            return '<' + super(DM108CInstrument.WaterVolumeRegister, self).unpack_format
 
     V_L1_N = VoltageRegister(DM108Instrument.ADDR_BASE + 4353)
     A_L1 = CurrentRegister(DM108Instrument.ADDR_BASE + 4365)
@@ -160,7 +173,10 @@ class DM108CInstrument(DM108Instrument):
             values.append(value)
 
             if self._logger.isEnabledFor(logging.DEBUG):
-                self._logger.debug("... addr=%d raw=%s value=%f", reg.addr, hex(raw), value)
+                self._logger.debug(
+                    "... addr=%d data=0x%s raw=%s value=%f",
+                    reg.addr, binascii.hexlify(reg_data), hex(raw), value
+                )
 
             # wait a bit before next read
             time.sleep(self.PACE_DELAY)
