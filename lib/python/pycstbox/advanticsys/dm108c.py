@@ -64,19 +64,16 @@ class DM108CInstrument(DM108Instrument):
             return '>' + super(DM108CInstrument.EM24INT32Reg, self).unpack_format
 
     class VoltageRegister(EM24INT32Reg):
-        @staticmethod
-        def decode(raw):
-            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
+        def decode(self, raw):
+            return super(DM108CInstrument.VoltageRegister, self).decode(raw) / 10.
 
     class CurrentRegister(EM24INT32Reg):
-        @staticmethod
-        def decode(raw):
-            return DM108CInstrument.EM24INT32Reg.decode(raw) / 1000.
+        def decode(self, raw):
+            return super(DM108CInstrument.CurrentRegister, self).decode(raw) / 1000.
 
     class PowerRegister(EM24INT32Reg):
-        @staticmethod
-        def decode(raw):
-            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
+        def decode(self, raw):
+            return super(DM108CInstrument.PowerRegister, self).decode(raw) / 10.
 
     class EM24INT16Register(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
@@ -98,9 +95,8 @@ class DM108CInstrument(DM108Instrument):
             return raw / 10.
 
     class EnergyRegister(EM24INT32Reg):
-        @staticmethod
-        def decode(raw):
-            return DM108CInstrument.EM24INT32Reg.decode(raw) / 10.
+        def decode(self, raw):
+            return super(DM108CInstrument.EnergyRegister, self).decode(raw) / 10.
 
     class WaterVolumeRegister(ModbusRegister):
         scale = 10.
