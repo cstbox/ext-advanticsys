@@ -100,7 +100,7 @@ class DM108CInstrument(DM108Instrument):
         scale = 10.
 
         def decode(self, raw):
-            return DM108CInstrument.EM24INT32Reg.decode(raw) / DM108CInstrument.WaterVolumeRegister.scale
+            return super(DM108CInstrument.WaterVolumeRegister, self).decode(raw) / self.scale
 
         @property
         def unpack_format(self):
