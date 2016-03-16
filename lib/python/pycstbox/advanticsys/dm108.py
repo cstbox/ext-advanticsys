@@ -125,7 +125,7 @@ class DM108Instrument(RTUModbusHWDevice):
 
             if self._config.modbus_id != self.unit_id:
                 raise HalError(
-                    'Modbus id stored in config regs does not match (expecting %d, got %d)' %
+                    "Modbus id stored in config regs does not match (expecting '%d', got '%d')" %
                     (self.unit_id, self._config.modbus_id)
                 )
 
