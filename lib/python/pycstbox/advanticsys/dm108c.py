@@ -42,7 +42,7 @@ class DM108CInstrument(DM108Instrument):
         lambda accum, size: accum + size, [r.size for r in CONFIGURATION_REGISTERS]
     )
 
-    class EM24_INT32Reg(ModbusRegister):
+    class INT32Reg(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size and
             forcing unsigned values since 2's complement is used here.
@@ -56,20 +56,20 @@ class DM108CInstrument(DM108Instrument):
             raw = ((raw >> 16) & 0xffff) | ((raw & 0xffff) << 16)
             return abs(raw - 0x100000000) if raw & 0x80000000 else raw
 
-    class VoltageRegister(EM24_INT32Reg):
+    class VoltageRegister(INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.EM24_INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.INT32Reg.decode(raw) / 10.
 
-    class CurrentRegister(EM24_INT32Reg):
+    class CurrentRegister(INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.EM24_INT32Reg.decode(raw) / 1000.
+            return DM108CInstrument.INT32Reg.decode(raw) / 1000.
 
-    class PowerRegister(EM24_INT32Reg):
+    class PowerRegister(INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.EM24_INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.INT32Reg.decode(raw) / 10.
 
     class PowerFactorRegister(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
@@ -89,10 +89,17 @@ class DM108CInstrument(DM108Instrument):
         def decode(raw):
             return raw / 10.    # TODO to be checked since it was wrong for EM21
 
-    class EnergyRegister(EM24_INT32Reg):
+    class EnergyRegister(INT32Reg):
         @staticmethod
         def decode(raw):
-            return DM108CInstrument.EM24_INT32Reg.decode(raw) / 10.
+            return DM108CInstrument.INT32Reg.decode(raw) / 10.
+
+    class WaterVolumeRegister(INT32Reg):
+        scale = 10.
+
+        @staticmethod
+        def decode(raw):
+            return DM108CInstrument.INT32Reg.decode(raw) / DM108CInstrument.WaterVolumeRegister.scale
 
     V_L1_N = VoltageRegister(DM108Instrument.ADDR_BASE + 4353)
     A_L1 = CurrentRegister(DM108Instrument.ADDR_BASE + 4365)
