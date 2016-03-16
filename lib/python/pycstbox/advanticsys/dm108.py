@@ -59,7 +59,16 @@ class DM108Instrument(RTUModbusHWDevice):
     ACK_AND_AES = ModbusRegister(ADDR_BASE + 4228)
     RADIO_POWER = ModbusRegister(ADDR_BASE + 4229)
     RETRIES = ModbusRegister(ADDR_BASE + 4230)
+    RESERVED = ModbusRegister(ADDR_BASE + 4231)
     TIMEOUT = ModbusRegister(ADDR_BASE + 4232)
+
+    CONFIGURATION_REGISTERS = [
+        GROUP_AND_CHANNEL, ID_AND_ROLL_NODE, UART_CONFIG, RADIO_ID, ACK_AND_AES,
+        RADIO_POWER, RETRIES, RESERVED, TIMEOUT
+    ]
+    CONFIGURATION_REGISTER_MAP_SIZE = reduce(
+        lambda accum, size: accum + size, [r.size for r in CONFIGURATION_REGISTERS]
+    )
 
     #: the compiled sequence of registers
     ALL_REGS = [PULSE_CNT]
@@ -120,7 +129,10 @@ class DM108Instrument(RTUModbusHWDevice):
         # check that unit id matches
         self._logger.info('getting unit configuration...')
         try:
-            self._config = self.Configuration(self.read_string(self.GROUP_AND_CHANNEL.addr, 9), self._logger)
+            self._config = self.Configuration(
+                self.read_string(self.CONFIGURATION_REGISTERS[0].addr, self.CONFIGURATION_REGISTER_MAP_SIZE),
+                self._logger
+            )
             self._logger.info('... %s', self._config)
 
             if self._config.modbus_id != self.unit_id:

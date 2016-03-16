@@ -37,6 +37,11 @@ __author__ = 'Eric PASCUAL - CSTB (eric.pascual@cstb.fr)'
 class DM108CInstrument(DM108Instrument):
     MODBUS_ID = ModbusRegister(DM108Instrument.ADDR_BASE + 4224)
 
+    CONFIGURATION_REGISTERS = [MODBUS_ID]
+    CONFIGURATION_REGISTER_MAP_SIZE = reduce(
+        lambda accum, size: accum + size, [r.size for r in CONFIGURATION_REGISTERS]
+    )
+
     class EM24_INT32Reg(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size and
