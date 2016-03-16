@@ -155,7 +155,7 @@ class DM108CInstrument(DM108Instrument):
             if not reg_data:
                 return None
 
-            raw = struct.unpack(reg.unpack_format, reg_data)[0]
+            raw = struct.unpack('<' + reg.unpack_format, reg_data)[0]
             value = reg.decode(raw)
             values.append(value)
 
