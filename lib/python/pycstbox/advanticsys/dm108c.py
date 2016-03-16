@@ -111,7 +111,7 @@ class DM108CInstrument(DM108Instrument):
 
     OutputValues = namedtuple(
         'OutputValues',
-        ["V_L1_N", "A_L1", "W_L1", "VA_L1", "VAR_L1", "PF_L1", "FREQ", "KWH", "KVARH", "PULSE_CNT"]
+        ["V_L1_N", "A_L1", "W_L1", "VA_L1", "VAR_L1", "PF_L1", "FREQ", "kWh", "kVARh", "PULSE_CNT"]
     )
 
     class Configuration(object):
