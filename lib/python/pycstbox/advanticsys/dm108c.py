@@ -109,7 +109,7 @@ class DM108CInstrument(DM108Instrument):
         @property
         def unpack_format(self):
             # DM108 regs do not use the same endianess as EM24 ones
-            return '<' + super(DM108CInstrument.WaterVolumeRegister, self).unpack_format
+            return '<' + super(DM108CInstrument.WaterVolumeRegister, self).unpack_format[1:]
 
     V_L1_N = VoltageRegister(DM108Instrument.ADDR_BASE + 4353)
     A_L1 = CurrentRegister(DM108Instrument.ADDR_BASE + 4365)
