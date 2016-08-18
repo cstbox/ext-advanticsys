@@ -75,6 +75,10 @@ class DM108CInstrument(DM108Instrument):
         def decode(self, raw):
             return super(DM108CInstrument.PowerRegister, self).decode(raw) / 10.
 
+    class PatchedPowerRegister(EM24INT32Reg):
+        def decode(self, raw):
+            return super(DM108CInstrument.PatchedPowerRegister, self).decode(raw & 0xffff0000) / 10.
+
     class EM24INT16Register(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
             """ Overridden __new__ for fixing the register size. """
@@ -96,7 +100,7 @@ class DM108CInstrument(DM108Instrument):
         def decode(self, raw):
             return super(DM108CInstrument.EnergyRegister, self).decode(raw) / 10.
 
-    class WaterVolumeRegister(ModbusRegister):
+    class WaterVolumeRegister(EM24INT32Reg):
         scale = 10.
 
         def decode(self, raw):
@@ -111,7 +115,7 @@ class DM108CInstrument(DM108Instrument):
     A_L1 = CurrentRegister(DM108Instrument.ADDR_BASE + 4365)
     W_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4371)
     VA_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4377)
-    VAR_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4383)
+    VAR_L1 = PatchedPowerRegister(DM108Instrument.ADDR_BASE + 4383)
     PF_L1 = PowerFactorRegister(DM108Instrument.ADDR_BASE + 4403)
     FREQ = FrequencyRegister(DM108Instrument.ADDR_BASE + 4408)
     KWH = EnergyRegister(DM108Instrument.ADDR_BASE + 4423)
