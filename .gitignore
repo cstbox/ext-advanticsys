@@ -15,3 +15,4 @@ lib/python/pycstbox/__init__.py
 DEBIAN/control
 RELEASE-VERSION
 fabfile-settings.py
+debug/
