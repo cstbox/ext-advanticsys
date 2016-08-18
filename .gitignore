@@ -16,3 +16,4 @@ DEBIAN/control
 RELEASE-VERSION
 fabfile-settings.py
 debug/
+fabfile.py
