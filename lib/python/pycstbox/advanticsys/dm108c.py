@@ -45,19 +45,12 @@ class DM108CInstrument(DM108Instrument):
 
     class EM24INT32Reg(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
-            """ Overridden __new__ for fixing the register size and
-            forcing unsigned values since 2's complement is used here.
+            """ Overridden __new__ for setting the register size and the signed option.
             """
-            return ModbusRegister.__new__(cls, addr, size=2, signed=False, *args, **kwargs)
+            return ModbusRegister.__new__(cls, addr, size=2, signed=True, *args, **kwargs)
 
-        def decode(self, raw):
-            # swap the words and apply the 2's complement if negative value
-            # BTW discard the signed since negative values have no real meaning
-            raw = ((raw >> 16) & 0xffff) | ((raw & 0xffff) << 16)
-            if self.signed:
-                return abs(raw - 0x100000000) if raw & 0x80000000 else raw
-            else:
-                return raw
+        def swap_words(self, bytes):
+            return bytes[2:] + bytes[:2]
 
         @property
         def unpack_format(self):
@@ -75,14 +68,14 @@ class DM108CInstrument(DM108Instrument):
         def decode(self, raw):
             return super(DM108CInstrument.PowerRegister, self).decode(raw) / 10.
 
-    class PatchedPowerRegister(EM24INT32Reg):
-        def decode(self, raw):
-            return super(DM108CInstrument.PatchedPowerRegister, self).decode(raw & 0xffff0000) / 10.
+    # class PatchedPowerRegister(EM24INT32Reg):
+    #     def decode(self, raw):
+    #         return super(DM108CInstrument.PatchedPowerRegister, self).decode(raw & 0xffff0000) / 10.
 
     class EM24INT16Register(ModbusRegister):
         def __new__(cls, addr, *args, **kwargs):
-            """ Overridden __new__ for fixing the register size. """
-            return ModbusRegister.__new__(cls, addr, *args, **kwargs)
+            """ Overridden __new__ for setting the signed option. """
+            return ModbusRegister.__new__(cls, addr, signed=True, *args, **kwargs)
 
         @property
         def unpack_format(self):
@@ -100,28 +93,47 @@ class DM108CInstrument(DM108Instrument):
         def decode(self, raw):
             return super(DM108CInstrument.EnergyRegister, self).decode(raw) / 10.
 
-    class WaterVolumeRegister(EM24INT32Reg):
-        scale = 10.
+    class WaterVolumeRegister(ModbusRegister):
+        """ AMB8568 version """
+        scale = 100.
+
+        def __new__(cls, addr, *args, **kwargs):
+            """ Overridden __new__ for setting the size. """
+            return ModbusRegister.__new__(cls, addr, size=3, *args, **kwargs)
 
         def decode(self, raw):
-            return super(DM108CInstrument.WaterVolumeRegister, self).decode(raw) / self.scale
+            """
+            The three INT16 registers form a BCD number of 12 digits represented in Little Endian.
+            i.e , if we have the register readings shown below:
+            reg4483 = 0x0102;
+            reg4484 = 0x0304;
+            reg4485 = 0x0506;
+            the raw BCD number (in little endian) is
+            0 1 0 2 0 3 0 4 0 5 0 6,
+            so in big endian the BCD real number would be:
+            0 6 0 5 0 4 0 3 0 2 0 1.
+            Converted to decimal, the number is 60504030201
+
+            :param raw: the byte buffer with the concatenated register contents as they are read
+            """
+            return int(binascii.hexlify(raw[::-1])) / self.scale
 
         @property
         def unpack_format(self):
-            # DM108 regs do not use the same endianess as EM24 ones
-            return '<' + super(DM108CInstrument.WaterVolumeRegister, self).unpack_format[1:]
+            # DM108C counter uses a special BCD format => no unpack
+            return None
 
     V_L1_N = VoltageRegister(DM108Instrument.ADDR_BASE + 4353)
     A_L1 = CurrentRegister(DM108Instrument.ADDR_BASE + 4365)
     W_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4371)
     VA_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4377)
-    VAR_L1 = PatchedPowerRegister(DM108Instrument.ADDR_BASE + 4383)
+    VAR_L1 = PowerRegister(DM108Instrument.ADDR_BASE + 4383)
     PF_L1 = PowerFactorRegister(DM108Instrument.ADDR_BASE + 4403)
     FREQ = FrequencyRegister(DM108Instrument.ADDR_BASE + 4408)
     KWH = EnergyRegister(DM108Instrument.ADDR_BASE + 4423)
     KVARH = EnergyRegister(DM108Instrument.ADDR_BASE + 4437)
 
-    PULSE_CNT = WaterVolumeRegister(DM108Instrument.ADDR_BASE + 4466)
+    PULSE_CNT = WaterVolumeRegister(DM108Instrument.ADDR_BASE + 4483)
 
     #: the compiled sequence of registers
     ALL_REGS = [V_L1_N, A_L1, W_L1, VA_L1, VAR_L1, PF_L1, FREQ, KWH, KVARH, PULSE_CNT]
@@ -165,7 +177,18 @@ class DM108CInstrument(DM108Instrument):
             if not reg_data:
                 return None
 
-            raw = struct.unpack(reg.unpack_format, reg_data)[0]
+            # reorder words before unpacking, since DM108C regs mix endianess
+            # (low endian for words in a 32 bits register, and big endian for bytes inside a word)
+            try:
+                reg_data = reg.swap_words(reg_data)
+            except AttributeError:
+                # means that this register does not need this
+                pass
+
+            if reg.unpack_format:
+                raw = struct.unpack(reg.unpack_format, reg_data)[0]
+            else:
+                raw = reg_data
             value = reg.decode(raw)
             values.append(value)
 
