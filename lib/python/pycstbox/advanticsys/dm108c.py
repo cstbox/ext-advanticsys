@@ -194,8 +194,8 @@ class DM108CInstrument(DM108Instrument):
 
             if self._logger.isEnabledFor(logging.DEBUG):
                 self._logger.debug(
-                    "... addr=%d data=0x%s raw=%s value=%f",
-                    reg.addr, binascii.hexlify(reg_data), hex(raw), value
+                    "... addr=%d data=0x%s value=%f",
+                    reg.addr, binascii.hexlify(reg_data), value
                 )
 
             # wait a bit before next read
