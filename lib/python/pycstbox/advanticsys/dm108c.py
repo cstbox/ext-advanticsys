@@ -103,6 +103,7 @@ class DM108CInstrument(DM108Instrument):
 
         def decode(self, raw):
             """
+            Extracted from ADV documentation:
             The three INT16 registers form a BCD number of 12 digits represented in Little Endian.
             i.e , if we have the register readings shown below:
             reg4483 = 0x0102;
@@ -114,7 +115,7 @@ class DM108CInstrument(DM108Instrument):
             0 6 0 5 0 4 0 3 0 2 0 1.
             Converted to decimal, the number is 60504030201
 
-            :param raw: the byte buffer with the concatenated register contents as they are read
+            :param str raw: the byte buffer with the concatenated register contents as they are read
             """
             return int(binascii.hexlify(raw[::-1])) / self.scale
 
@@ -162,6 +163,9 @@ class DM108CInstrument(DM108Instrument):
         and have to issue one request per register. This will have severe impacts
         on performances.
 
+        We cannot use the generic mechanism because of the special treatment of the
+        pulse count multi-registers.
+
         :rtype: OutputValues
         """
         if self._logger.isEnabledFor(logging.DEBUG):
@@ -173,6 +177,7 @@ class DM108CInstrument(DM108Instrument):
         values = []
         # read all the registers, one at a time
         for reg in self.ALL_REGS:
+            # read the registers content (returned as a str)
             reg_data = self._read_registers(reg.addr, reg.size)
             if not reg_data:
                 return None
@@ -186,10 +191,13 @@ class DM108CInstrument(DM108Instrument):
                 pass
 
             if reg.unpack_format:
-                raw = struct.unpack(reg.unpack_format, reg_data)[0]
+                # since we read one register at a time, we have to "convert" the
+                # single itme tuple returned by unpack into a scalar by getting the
+                # first item
+                value = reg.decode(struct.unpack(reg.unpack_format, reg_data)[0])
             else:
-                raw = reg_data
-            value = reg.decode(raw)
+                # pass the raw content to decode
+                value = reg.decode(reg_data)
             values.append(value)
 
             if self._logger.isEnabledFor(logging.DEBUG):
